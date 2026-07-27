@@ -14,8 +14,9 @@ const geist = Geist({
 });
 
 export const metadata = {
-  title: "Apex Athletic Gym • Workout Tracker Pro",
-  description: "Official Apex Gym & Athletic Club featuring interactive workout logging, personal records, calendar, and variable gradient themes.",
+  title: "Workout Tracker",
+  description:
+    "Track workouts, personal records, history, statistics, and progress.",
 };
 
 export default function RootLayout({

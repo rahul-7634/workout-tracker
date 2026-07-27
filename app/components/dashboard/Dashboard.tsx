@@ -5,8 +5,26 @@ import Link from "next/link";
 import Header from "../layout/Header";
 import StatsCard from "./StatsCard";
 import WorkoutCard from "./WorkoutCard";
-import { Flame, Calendar, History, Sparkles, Dumbbell, Plus } from "lucide-react";
+import {
+  Flame,
+  Calendar,
+  History,
+  Sparkles,
+  Dumbbell,
+  Plus,
+} from "lucide-react";
 import { getDashboardStats } from "../../lib/stats";
+
+type CustomRoutine = {
+  id: string;
+  title: string;
+  exercises: {
+    name: string;
+    sets: number;
+    repRange: string;
+  }[];
+  createdAt: string;
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -15,8 +33,20 @@ export default function Dashboard() {
     totalSessions: 0,
   });
 
+  const [customRoutines, setCustomRoutines] = useState<CustomRoutine[]>([]);
+
   useEffect(() => {
     setStats(getDashboardStats());
+
+    const saved = localStorage.getItem("custom_workout_routines");
+
+    if (saved) {
+      try {
+        setCustomRoutines(JSON.parse(saved));
+      } catch {
+        setCustomRoutines([]);
+      }
+    }
   }, []);
 
   const workouts = [
@@ -66,16 +96,16 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10">
-      {/* Header */}
       <Header />
 
-      {/* ─── Stats Section ─── */}
+      {/* Stats */}
       <section>
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-widest text-blue-600 dark:text-blue-400">
               Your Progress
             </p>
+
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
               At a Glance
             </h2>
@@ -91,6 +121,7 @@ export default function Dashboard() {
             color="bg-orange-500"
             gradient="from-amber-500 via-orange-500 to-red-500"
           />
+
           <StatsCard
             title="This Week"
             value={String(stats.thisWeek)}
@@ -99,6 +130,7 @@ export default function Dashboard() {
             color="bg-emerald-500"
             gradient="from-emerald-500 via-teal-500 to-cyan-500"
           />
+
           <StatsCard
             title="All Time"
             value={String(stats.totalSessions)}
@@ -110,29 +142,35 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* ─── Custom Plan CTA Banner ─── */}
+      {/* Custom Builder Banner */}
+
       <section className="rounded-3xl border border-blue-500/30 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 dark:from-blue-900/40 dark:via-indigo-900/30 dark:to-purple-900/30 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5">
         <div className="space-y-1.5 flex-1">
           <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            <Sparkles size={14} className="text-amber-500" /> Custom Training
+            <Sparkles size={14} className="text-amber-500" />
+            Custom Training
           </span>
+
           <h3 className="text-xl font-black text-slate-900 dark:text-white">
             Build Your Own Workout Plan
           </h3>
+
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Mix & match from 30+ exercises across Chest, Back, Arms, and Legs. Set your own sets and rep targets.
+            Create unlimited custom workout routines and save them.
           </p>
         </div>
 
         <Link
           href="/custom"
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/30 hover:scale-105 active:scale-95 transition whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/30 hover:scale-105 transition"
         >
-          <Plus size={16} /> Open Plan Builder →
+          <Plus size={16} />
+          Open Builder
         </Link>
       </section>
 
-      {/* ─── Workout Programs Grid ─── */}
+      {/* Preset Programs */}
+
       <section>
         <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
@@ -140,13 +178,11 @@ export default function Dashboard() {
               <Dumbbell size={13} className="inline -mt-0.5 mr-1" />
               Preset Programs
             </p>
+
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
               Push / Pull / Legs Split
             </h2>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Tap a card to start logging your session
-          </p>
         </div>
 
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -161,7 +197,44 @@ export default function Dashboard() {
             />
           ))}
         </div>
-      </section>
+           </section>
+
+      {/* Custom Workouts */}
+      {customRoutines.length > 0 && (
+        <section>
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                Your Custom Workouts
+              </p>
+
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                Saved Workout Plans
+              </h2>
+            </div>
+
+            <Link
+              href="/custom"
+              className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              View All →
+            </Link>
+          </div>
+
+          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {customRoutines.map((routine) => (
+              <WorkoutCard
+                key={routine.id}
+                title={routine.title}
+                subtitle={`${routine.exercises.length} Custom Exercises`}
+                href="/custom"
+                image="/images/custom-workout.png"
+                exerciseCount={routine.exercises.length}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
-}
+}   
